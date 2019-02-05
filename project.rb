@@ -3,11 +3,11 @@ require './data'
 # represents a single directory inside your e-pub root.
 class Project
   include EpubData
-  attr_accessor :data
+  attr_accessor :data, :name
   def initialize(path)
     @path = path
-    @site_name = path.split('/').last
-    @engine = jade_child(@site_name)
+    @name = path.split('/').last
+    @engine = jade_child(@name)
   end
 
   ## return hash representing the group (project, jade child (where applicable) and jade )
@@ -15,7 +15,7 @@ class Project
     ensure_valid_project do
       return
     end
-    build_projects
+    build_project
   end
 
   private
@@ -25,16 +25,20 @@ class Project
     yield unless ruby_project? && (@engine || uses_jade_directly?)
   end
 
-  def build_projects
-    projects = [
+  def build_project
+
+
+    folders = [
       {
-        name: @site_name,
+        name: @name,
         path: @path,
       },
     ]
-    projects << engine_info unless @engine.nil?
-    projects << jade_info
-    @data = { name: @site_name, projects: projects }
+
+    folders << engine_info unless @engine.nil?
+    folders << jade_info
+
+    @data = { folders: folders }
   end
 
   def engine_info
@@ -64,7 +68,7 @@ class Project
   end
 
   def jade_in_gemspec?
-    gemspec_path = File.join(@path, "#{@site_name}.gemspec")
+    gemspec_path = File.join(@path, "#{@name}.gemspec")
     return false unless File.exist?(gemspec_path)
     File.read(gemspec_path).include?("s.add_dependency 'jade'")
   end
